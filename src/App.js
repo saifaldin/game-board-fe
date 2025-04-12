@@ -1,25 +1,27 @@
-import logo from './logo.svg';
-import './App.css';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Board from './Board';
+import Goal from './Goal';
+import _ from 'lodash';
+import HomePage from './Home';
 
-function App() {
+const App = (props) => {
+  const { socket } = props;
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<HomePage socket={socket} />} />
+        <Route path="/game/:username" element={(
+          <div id='game'>
+            <Goal socket={socket} goalRandomColors={Array(9).fill(null)} />
+            <Board socket={socket} initialBoard={Array(25).fill(null)} myboard={true} />
+            <Board socket={socket} initialBoard={Array(25).fill(null)} myboard={false} />
+          </div>
+        )} />
+      </Routes>
+    </Router>
   );
-}
+};
 
 export default App;

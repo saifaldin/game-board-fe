@@ -1,0 +1,33 @@
+.username_form {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.username_form h1 {
+  margin: 40px 130px;
+  width: 50%;
+  white-space: nowrap;
+}
+
+.username_form input {
+  width: 30%;
+  height: 50px;
+  font-size: 1.5rem;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  padding: 0 10px;
+  margin: 10px 50px;
+}
+
+.username_form button {
+  width: 10%;
+  height: 50px;
+  font-size: 1rem;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  padding: 0 10px;
+  margin: 10px 0;
+}
