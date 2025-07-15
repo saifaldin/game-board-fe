@@ -19,7 +19,7 @@ jobs:
         uses: simbo/changes-between-tags-action@v1
         with:
           validate-tag: false
-          tag-pattern: 'v[0-9]+.[0-9]+.[0-9]+' # Adjust the regex to match your tag format
+          tag-pattern: 'v[0-9]+' # Adjust the regex to match your tag format
 
       - name: Process commit messages
         id: process_commits
@@ -27,6 +27,9 @@ jobs:
           commits="${{ steps.get_commits.outputs.changes }}"
           jira_tasks=$(echo "$commits" | grep -o -E 'DA-[0-9]+' | sort -u | tr '\n' ',' | sed 's/,$//')
           no_task_commits=$(echo "$commits" | grep -v -E 'DA-[0-9]+' | awk -F' ' '{print $2 " - " $1}' | tr '\n' ';')
+          echo "commits: $commits"
+          echo "jira_tasks: $jira_tasks"
+          echo "no_task_commits: $no_task_commits"
 
           echo "JIRA_TASKS=$jira_tasks" >> $GITHUB_ENV
           echo "NO_TASK_COMMITS=$no_task_commits" >> $GITHUB_ENV
