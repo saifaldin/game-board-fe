@@ -1,0 +1,51 @@
+name: Jira Release Versioning & Slack Notification
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  update-and-notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get previous tag
+        id: previoustag
+        uses: 'WyriHaximus/github-action-get-previous-tag@v1'
+
+      - name: Get Git Commit Data
+        id: git_logs
+        run: |
+          # Pass full messages for finding all keys
+          echo "full_messages<<EOF" >> $GITHUB_OUTPUT
+          git log ${{ steps.previoustag.outputs.tag }}..HEAD --format=%B >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          # Pass subjects for finding non-compliant commits
+          echo "commit_subjects<<EOF" >> $GITHUB_OUTPUT
+          git log ${{ steps.previoustag.outputs.tag }}..HEAD --format=%s >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # Use a recent LTS version of Node.js
+          cache: 'npm' # Cache npm dependencies for faster runs
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Run Automation Script
+        run: node .github/scripts/release-automation.js
+        env:
+          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          JIRA_PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          FULL_COMMIT_MESSAGES: ${{ steps.git_logs.outputs.full_messages }}
+          COMMIT_SUBJECTS: ${{ steps.git_logs.outputs.commit_subjects }}
