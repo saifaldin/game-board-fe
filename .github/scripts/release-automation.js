@@ -17,6 +17,12 @@ async function run() {
       COMMIT_SUBJECTS,
     } = process.env;
 
+    if (!JIRA_BASE_URL || !JIRA_USER_EMAIL || !JIRA_API_TOKEN || !JIRA_PROJECT_KEY || !SLACK_WEBHOOK_URL || !FULL_COMMIT_MESSAGES || !COMMIT_SUBJECTS) {
+      throw new Error('Missing required environment variables');
+    }
+
+    console.log(github.context);
+
     const releaseTag = github.context.payload.release.tag_name;
     const releaseUrl = github.context.payload.release.html_url;
     
