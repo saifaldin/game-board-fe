@@ -1,51 +1,78 @@
-name: Jira Release Versioning & Slack Notification
+name: Jira Task Versioning
 
 on:
   push:
     branches:
       - main
+
 jobs:
-  update-and-notify:
+  jira-versioning:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0 # Needed to get all commit history
 
-      - name: Get previous tag
-        id: previoustag
-        uses: 'WyriHaximus/github-action-get-previous-tag@v1'
-
-      - name: Get Git Commit Data
-        id: git_logs
-        run: |
-          # Pass full messages for finding all keys
-          echo "full_messages<<EOF" >> $GITHUB_OUTPUT
-          git log ${{ steps.previoustag.outputs.tag }}..HEAD --format=%B >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-          # Pass subjects for finding non-compliant commits
-          echo "commit_subjects<<EOF" >> $GITHUB_OUTPUT
-          git log ${{ steps.previoustag.outputs.tag }}..HEAD --format=%s >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Get commits between last two tags
+        id: get_commits
+        uses: simbo/changes-between-tags-action@v1
         with:
-          node-version: '20' # Use a recent LTS version of Node.js
-          cache: 'npm' # Cache npm dependencies for faster runs
+          tag-pattern: 'v[0-9]+.[0-9]+.[0-9]+' # Adjust the regex to match your tag format
 
-      - name: Install Dependencies
-        run: npm install
+      - name: Process commit messages
+        id: process_commits
+        run: |
+          commits="${{ steps.get_commits.outputs.changes }}"
+          jira_tasks=$(echo "$commits" | grep -o -E 'DA-[0-9]+' | sort -u | tr '\n' ',' | sed 's/,$//')
+          no_task_commits=$(echo "$commits" | grep -v -E 'DA-[0-9]+' | awk -F' ' '{print $2 " - " $1}' | tr '\n' ';')
 
-      - name: Run Automation Script
-        run: node .github/scripts/release-automation.js
+          echo "JIRA_TASKS=$jira_tasks" >> $GITHUB_ENV
+          echo "NO_TASK_COMMITS=$no_task_commits" >> $GITHUB_ENV
+          echo "::set-output name=jira_tasks::$jira_tasks"
+          echo "::set-output name=no_task_commits::$no_task_commits"
+
+      - name: Create Jira version and update issues
+        if: env.JIRA_TASKS != ''
+        uses: levigo/github-action-jira-fixversion@v1.0
+        with:
+          domain: ${{ secrets.JIRA_BASE_URL }}
+          username: ${{ secrets.JIRA_USER_EMAIL }}
+          password: ${{ secrets.JIRA_API_TOKEN }}
+          versionName: ${{ github.ref_name }}
+          issueKeys: ${{ env.JIRA_TASKS }}
+
+      - name: Send Slack notification
+        uses: slackapi/slack-github-action@v1.23.0
+        with:
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Jira Versioning Report for `${{ github.ref_name }}`*"
+                  }
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Updated Jira Tasks:*\n${{ env.JIRA_TASKS }}"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Commits without Task Names:*\n${{ env.NO_TASK_COMMITS }}"
+                  }
+                }
+              ]
+            }
         env:
-          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
-          JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
-          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
-          JIRA_PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-          FULL_COMMIT_MESSAGES: ${{ steps.git_logs.outputs.full_messages }}
-          COMMIT_SUBJECTS: ${{ steps.git_logs.outputs.commit_subjects }}
