@@ -8,7 +8,7 @@ const socket = io('https://6d8b-156-218-13-163.ngrok.io', {
   transports: ['websocket'],
 });
 
-// Test 06
+// Test 08
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
