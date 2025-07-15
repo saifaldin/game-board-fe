@@ -1,9 +1,9 @@
 name: Jira Release Versioning & Slack Notification
 
 on:
-  release:
-    types: [created]
-
+  push:
+    branches:
+      - main
 jobs:
   update-and-notify:
     runs-on: ubuntu-latest
