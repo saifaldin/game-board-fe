@@ -48,23 +48,27 @@ jobs:
           versionName: ${{ steps.get_commits.outputs.tag }}
           issueKeys: ${{ env.JIRA_TASKS }}
 
-      - name: Send Slack notification
-        uses: slackapi/slack-github-action@v2.1.1
-        with:
-          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
-          webhook-type: incoming-webhook
-          payload: |
-            text: "*Jira Versioning Report for `${{ steps.get_commits.outputs.tag }}`*"
-            blocks:
-              - type: "section"
-                text:
-                  type: "mrkdwn"
-                  text: "*Jira Versioning Report for `${{ steps.get_commits.outputs.tag }}`*"
-              - type: "section"
-                text:
-                  type: "mrkdwn"
-                  text: "*Updated Jira Tasks:*\n${{ env.JIRA_TASKS }}"
-              - type: "section"
-                text:
-                  type: "mrkdwn"
-                  text: "*Commits without Task Names:*\n${{ env.NO_TASK_COMMITS_NEWLINES }}"
+      - name: Print NO_TASK_COMMITS_NEWLINES
+        run: |
+          echo "NO_TASK_COMMITS_NEWLINES: ${{ env.NO_TASK_COMMITS_NEWLINES }}"
+
+      # - name: Send Slack notification
+      #   uses: slackapi/slack-github-action@v2.1.1
+      #   with:
+      #     webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+      #     webhook-type: incoming-webhook
+      #     payload: |
+      #       text: "*Jira Versioning Report for `${{ steps.get_commits.outputs.tag }}`*"
+      #       blocks:
+      #         - type: "section"
+      #           text:
+      #             type: "mrkdwn"
+      #             text: "*Jira Versioning Report for `${{ steps.get_commits.outputs.tag }}`*"
+      #         - type: "section"
+      #           text:
+      #             type: "mrkdwn"
+      #             text: "*Updated Jira Tasks:*\n${{ env.JIRA_TASKS }}"
+      #         - type: "section"
+      #           text:
+      #             type: "mrkdwn"
+      #             text: "*Commits without Task Names:*\n${{ env.NO_TASK_COMMITS_NEWLINES }}"
