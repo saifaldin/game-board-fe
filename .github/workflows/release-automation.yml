@@ -31,7 +31,7 @@ jobs:
           echo "jira_tasks: $jira_tasks"
           echo "no_task_commits: $no_task_commits"
           echo "tag: ${{ steps.get_commits.outputs.tag }}"
-          
+
           echo "JIRA_TASKS=$jira_tasks" >> $GITHUB_ENV
           echo "NO_TASK_COMMITS=$no_task_commits" >> $GITHUB_ENV
           echo "::set-output name=jira_tasks::$jira_tasks"
@@ -48,36 +48,18 @@ jobs:
           issueKeys: ${{ env.JIRA_TASKS }}
 
       - name: Send Slack notification
-        uses: slackapi/slack-github-action@v1.23.0
+        uses: slackapi/slack-github-action@v2.1.1
         with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
           payload: |
-            {
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "*Jira Versioning Report for `${{ steps.get_commits.outputs.tag }}`*"
-                  }
-                },
-                {
-                  "type": "divider"
-                },
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "*Updated Jira Tasks:*\n${{ env.JIRA_TASKS }}"
-                  }
-                },
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "*Commits without Task Names:*\n${{ env.NO_TASK_COMMITS }}"
-                  }
-                }
-              ]
-            }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+            text: "*Jira Versioning Report for `${{ steps.get_commits.outputs.tag }}`*"
+            blocks:
+              - type: "section"
+                text:
+                  type: "mrkdwn"
+                  text: "*Updated Jira Tasks:*\n${{ env.JIRA_TASKS }}"
+              - type: "section"
+                text:
+                  type: "mrkdwn"
+                  text: "*Commits without Task Names:*\n${{ env.NO_TASK_COMMITS }}"
