@@ -26,11 +26,7 @@ jobs:
         run: |
           commits="${{ steps.get_commits.outputs.changes }}"
           jira_tasks=$(echo "$commits" | grep -o -E 'DA-[0-9]+' | sort -u | tr '\n' ',' | sed 's/,$//')
-          no_task_commits=$(echo "$commits" | grep -v -E 'DA-[0-9]+' | awk -F' ' '{print $2 " - " $1}' | tr '\n' ';')
-          echo "commits: $commits"
-          echo "jira_tasks: $jira_tasks"
-          echo "no_task_commits: $no_task_commits"
-          echo "tag: ${{ steps.get_commits.outputs.tag }}"
+          no_task_commits=$(echo "$commits" | grep -v -E 'DA-[0-9]+')
 
           echo "JIRA_TASKS=$jira_tasks" >> $GITHUB_ENV
           echo "NO_TASK_COMMITS=$no_task_commits" >> $GITHUB_ENV
