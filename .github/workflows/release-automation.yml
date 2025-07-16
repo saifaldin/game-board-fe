@@ -26,7 +26,7 @@ jobs:
         run: |
           commits="${{ steps.get_commits.outputs.changes }}"
           jira_tasks=$(echo "$commits" | grep -o -E 'DA-[0-9]+' | sort -u | tr '\n' ',' | sed 's/,$//')
-          no_task_commits=$(echo "$commits" | grep -v -E 'DA-[0-9]+' | sort -u | tr '\n' ';')
+          no_task_commits=$(echo "$commits" | grep -v -E 'DA-[0-9]+' | sort -u)
 
           echo "JIRA_TASKS=$jira_tasks" >> $GITHUB_ENV
           echo "NO_TASK_COMMITS=$no_task_commits" >> $GITHUB_ENV
@@ -58,4 +58,4 @@ jobs:
               - type: "section"
                 text:
                   type: "mrkdwn"
-                  text: "*Commits without Task Names:*\n${{ replace(env.NO_TASK_COMMITS, ';', '\n') }}"
+                  text: "*Commits without Task Names:*\n${{ env.NO_TASK_COMMITS }}"
