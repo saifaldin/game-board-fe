@@ -28,11 +28,7 @@ jobs:
           jira_tasks=$(echo "$commits" | grep -o -E 'DA-[0-9]+' | sort -u | tr '\n' ',' | sed 's/,$//')
           no_task_commits=$(echo "$commits" | grep -v -E 'DA-[0-9]+' | sort -u | tr '\n' ';')
 
-          {
-            echo 'NO_TASK_COMMITS_NEWLINES<<EOF'
-            echo "$no_task_commits" | tr ';' '\n'
-            echo EOF
-          } >> "$GITHUB_ENV"
+          echo "NO_TASK_COMMITS_NEWLINES=$(echo "$no_task_commits" | tr ';' '\\n')" >> "$GITHUB_ENV"
 
           echo "JIRA_TASKS=$jira_tasks" >> $GITHUB_ENV
           echo "::set-output name=jira_tasks::$jira_tasks"
@@ -48,27 +44,23 @@ jobs:
           versionName: ${{ steps.get_commits.outputs.tag }}
           issueKeys: ${{ env.JIRA_TASKS }}
 
-      - name: Print NO_TASK_COMMITS_NEWLINES
-        run: |
-          echo "NO_TASK_COMMITS_NEWLINES: ${{ env.NO_TASK_COMMITS_NEWLINES }}"
-
-      # - name: Send Slack notification
-      #   uses: slackapi/slack-github-action@v2.1.1
-      #   with:
-      #     webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
-      #     webhook-type: incoming-webhook
-      #     payload: |
-      #       text: "*Jira Versioning Report for `${{ steps.get_commits.outputs.tag }}`*"
-      #       blocks:
-      #         - type: "section"
-      #           text:
-      #             type: "mrkdwn"
-      #             text: "*Jira Versioning Report for `${{ steps.get_commits.outputs.tag }}`*"
-      #         - type: "section"
-      #           text:
-      #             type: "mrkdwn"
-      #             text: "*Updated Jira Tasks:*\n${{ env.JIRA_TASKS }}"
-      #         - type: "section"
-      #           text:
-      #             type: "mrkdwn"
-      #             text: "*Commits without Task Names:*\n${{ env.NO_TASK_COMMITS_NEWLINES }}"
+      - name: Send Slack notification
+        uses: slackapi/slack-github-action@v2.1.1
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            text: "*Jira Versioning Report for `${{ steps.get_commits.outputs.tag }}`*"
+            blocks:
+              - type: "section"
+                text:
+                  type: "mrkdwn"
+                  text: "*Jira Versioning Report for `${{ steps.get_commits.outputs.tag }}`*"
+              - type: "section"
+                text:
+                  type: "mrkdwn"
+                  text: "*Updated Jira Tasks:*\n${{ env.JIRA_TASKS }}"
+              - type: "section"
+                text:
+                  type: "mrkdwn"
+                  text: "*Commits without Task Names:*\n${{ env.NO_TASK_COMMITS_NEWLINES }}"
