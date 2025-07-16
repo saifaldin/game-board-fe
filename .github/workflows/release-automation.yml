@@ -19,7 +19,7 @@ jobs:
         uses: simbo/changes-between-tags-action@v1
         with:
           validate-tag: false
-          tag-pattern: 'v[0-9]+' # Adjust the regex to match your tag format
+          tag-pattern: 'v[0-9]+'
 
       - name: Process commit messages
         id: process_commits
@@ -30,7 +30,8 @@ jobs:
           echo "commits: $commits"
           echo "jira_tasks: $jira_tasks"
           echo "no_task_commits: $no_task_commits"
-
+          echo "tag: ${{ steps.get_commits.outputs.tag }}"
+          
           echo "JIRA_TASKS=$jira_tasks" >> $GITHUB_ENV
           echo "NO_TASK_COMMITS=$no_task_commits" >> $GITHUB_ENV
           echo "::set-output name=jira_tasks::$jira_tasks"
@@ -43,7 +44,7 @@ jobs:
           domain: ${{ secrets.JIRA_BASE_URL }}
           username: ${{ secrets.JIRA_USER_EMAIL }}
           password: ${{ secrets.JIRA_API_TOKEN }}
-          versionName: ${{ github.ref_name }}
+          versionName: ${{ steps.get_commits.outputs.tag }}
           issueKeys: ${{ env.JIRA_TASKS }}
 
       - name: Send Slack notification
@@ -56,7 +57,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "*Jira Versioning Report for `${{ github.ref_name }}`*"
+                    "text": "*Jira Versioning Report for `${{ steps.get_commits.outputs.tag }}`*"
                   }
                 },
                 {
