@@ -12,7 +12,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Needed to get all commit history
+          fetch-depth: 0
 
       - name: Get commits between last two tags
         id: get_commits
@@ -26,9 +26,7 @@ jobs:
         run: |
           commits="${{ steps.get_commits.outputs.changes }}"
           jira_tasks=$(echo "$commits" | grep -o -E 'DA-[0-9]+' | sort -u | tr '\n' ',' | sed 's/,$//')
-          no_task_commits=$(echo "$commits" | grep -v -E 'DA-[0-9]+' | sort -u | tr '\n' ';')
-
-          echo "NO_TASK_COMMITS_NEWLINES=$(echo "$no_task_commits" | tr ';' '\\n')" >> "$GITHUB_ENV"
+          no_task_commits=$(echo "$commits" | grep -v -E 'DA-[0-9]+' | sort -u | tr '\n' ' -- ')
 
           echo "JIRA_TASKS=$jira_tasks" >> $GITHUB_ENV
           echo "::set-output name=jira_tasks::$jira_tasks"
@@ -63,4 +61,4 @@ jobs:
               - type: "section"
                 text:
                   type: "mrkdwn"
-                  text: "*Commits without Task Names:*\n${{ env.NO_TASK_COMMITS_NEWLINES }}"
+                  text: "*Commits without Task Names:*\n${{ env.NO_TASK_COMMITS }}"
